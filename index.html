@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieBox - Sales Performance Dashboard</title>
+    <!-- Load Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Load Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Data Labels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        /* Custom animations and styles */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .animate-slideIn {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s infinite;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-item.active {
+            background-color: rgba(99, 102, 241, 0.2);
+            border-left: 4px solid #6366f1;
+        }
+        
+        .filter-select {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-select:hover {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        .chart-container {
+            transition: all 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            transform: scale(1.01);
+        }
+        
+        .kpi-card {
+            transition: all 0.3s ease;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(99, 102, 241, 0.5);
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Glow effect for active elements */
+        .glow {
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Theme colors */
+        .theme-purple {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --primary-dark: #7c3aed;
+        }
+        
+        .theme-blue {
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --primary-dark: #2563eb;
+        }
+        
+        .theme-teal {
+            --primary: #14b8a6;
+            --primary-light: #2dd4bf;
+            --primary-dark: #0d9488;
+        }
+        
+        .theme-rose {
+            --primary: #f43f5e;
+            --primary-light: #fb7185;
+            --primary-dark: #e11d48;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-500 min-h-screen flex theme-purple" data-mode="light">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white dark:bg-gray-800 shadow-xl transition-all duration-300 border-r border-gray-200 dark:border-gray-700 hidden lg:flex flex-col animate-slideIn">
+        <div class="h-20 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 px-4">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center mr-3">
+                    <span class="material-icons text-white">local_movies</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100">MovieBox</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Sales Dashboard</p>
+                </div>
+            </div>
+        </div>
+        <nav class="p-4 space-y-2 flex-1">
+            <a href="#" class="sidebar-item active flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300">
+                <span class="material-icons mr-3">dashboard</span>
+                Dashboard
+            </a>
+            <a href="/booking.html" class="sidebar-item flex items-center px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300">
+                <span class="material-icons mr-3">confirmation_number</span>
+                Book Tickets
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
+                    <span class="material-icons text-white">person</span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Admin User</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button class="theme-toggle w-6 h-6 rounded-full bg-purple-500 border-2 border-white" data-theme="purple"></button>
+                <button class="theme-toggle w-6 h-6 rounded-full bg-blue-500 border-2 border-white" data-theme="blue"></button>
+                <button class="theme-toggle w-6 h-6 rounded-full bg-teal-500 border-2 border-white" data-theme="teal"></button>
+                <button class="theme-toggle w-6 h-6 rounded-full bg-rose-500 border-2 border-white" data-theme="rose"></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="lg:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 mr-2">
+                    <span class="material-icons">menu</span>
+                </button>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">Sales Performance Dashboard</h2>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Date Display -->
+                <div class="hidden md:flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <span class="material-icons text-sm mr-1">today</span>
+                    <span id="current-date"></span>
+                </div>
+                
+                <!-- Dark Mode Toggle -->
+                <button id="dark-mode-toggle" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300" title="Toggle Dark Mode">
+                    <span id="sun-icon" class="material-icons">light_mode</span>
+                    <span id="moon-icon" class="material-icons hidden">dark_mode</span>
+                </button>
+                
+                <!-- Loading Spinner -->
+                <div id="loading-spinner" class="hidden animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="main-content flex-1 p-6 overflow-y-auto custom-scrollbar">
+            <!-- Alert/Message Box -->
+            <div id="message-box" class="hidden mb-6 p-4 rounded-xl text-sm transition-all duration-300 flex items-center animate-fadeIn" role="alert">
+                <span class="material-icons mr-2">info</span>
+                <span id="message-text"></span>
+            </div>
+
+            <!-- Dynamic Filter Panel -->
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mb-8 animate-fadeIn card-hover">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                    <span class="material-icons mr-2 text-purple-500">filter_list</span>
+                    Filters
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 items-end">
+                    <div>
+                        <label for="city-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                        <select id="city-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                            <option value="All">All Cities</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="theatre-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Theatre</label>
+                        <select id="theatre-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                            <option value="All">All Theatres</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="showtime-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Show Time</label>
+                        <select id="showtime-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                            <option value="All">All Times</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="seat-category-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Seat Category</label>
+                        <select id="seat-category-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                            <option value="All">All Categories</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="start-date-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                        <input type="date" id="start-date-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                    </div>
+                    
+                    <div>
+                        <label for="end-date-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+                        <input type="date" id="end-date-filter" class="filter-select w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                    </div>
+
+                    <button id="apply-filters-btn" onclick="applyFilters()" class="w-full h-12 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-600 hover:to-indigo-700 flex items-center justify-center animate-pulse-slow">
+                        <span class="material-icons mr-2">search</span>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div id="kpi-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Cards will be injected here by JS -->
+            </div>
+
+            <!-- Charts Grid 1: Core Performance -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Chart 1: Revenue by Movie Title (Top 5) -->
+                <div class="lg:col-span-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn card-hover chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Top Movies by Revenue</h3>
+                        <button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
+                            <span class="material-icons">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="topMoviesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Revenue by City (Pie) -->
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn card-hover chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Revenue by City</h3>
+                        <button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
+                            <span class="material-icons">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="cityRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid 2: Deep Dive Analysis -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Chart 3: Revenue by Theatre Name (Bar) -->
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn card-hover chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Revenue by Theatre</h3>
+                        <button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
+                            <span class="material-icons">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="theatreRevenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Persons by Age Group -->
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn card-hover chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Audience by Age Group</h3>
+                        <button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
+                            <span class="material-icons">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="ageGroupPersonsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 5: Revenue by Seat Category -->
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn card-hover chart-container">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Revenue by Seat Category</h3>
+                        <button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
+                            <span class="material-icons">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="seatCategoryRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Table Section -->
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mt-8 animate-fadeIn card-hover">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">Detailed Transactions</h3>
+                    <button class="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-600 hover:to-indigo-700 flex items-center">
+                        <span class="material-icons text-sm mr-1">download</span>
+                        Export
+                    </button>
+                </div>
+
+                <!-- Data Table Container -->
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                    <table id="sales-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <!-- Table Headers injected here -->
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Table Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination and Status -->
+                <div class="flex flex-col sm:flex-row items-center justify-between mt-4">
+                    <div id="pagination-status" class="text-sm text-gray-600 dark:text-gray-400 mb-2 sm:mb-0">
+                        <!-- Status text injected here -->
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="prev-page-btn" class="px-4 py-2 text-sm font-bold rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center">
+                            <span class="material-icons text-sm mr-1">chevron_left</span>
+                            Previous
+                        </button>
+                        <button id="next-page-btn" class="px-4 py-2 text-sm font-bold rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center">
+                            Next
+                            <span class="material-icons text-sm ml-1">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Message box at the bottom for notifications -->
+            <div id="message-box-bottom" class="hidden mt-8 p-4 rounded-xl text-sm transition-all duration-300 flex items-center animate-fadeIn" role="alert">
+                <span class="material-icons mr-2">info</span>
+                <span id="message-text-bottom"></span>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURATION AND UTILITIES ---
+        const BASE_API_URL = 'http://localhost:5500/api'; 
+        
+        // Global variables for the dashboard state
+        const currencyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+        let currentFilters = {}; 
+        
+        // Global variables for the data table
+        let allTicketData = []; // Store the full data set
+        let currentPage = 1;
+        const ROWS_PER_PAGE = 50; // Required pagination limit
+        let sortColumn = 'ticket_id'; // Default sort column
+        let sortDirection = 'desc'; // Default sort direction: Ticket ID decreasing
+        
+        // Chart.js instances
+        let topMoviesChartInstance, cityRevenueChartInstance, theatreRevenueChartInstance, ageGroupPersonsChartInstance, seatCategoryRevenueChartInstance;
+
+        /** Toggles the loading spinner visibility. */
+        function showLoading(show) {
+            const spinner = document.getElementById('loading-spinner');
+            if (spinner) {
+                spinner.classList.toggle('hidden', !show);
+            }
+        }
+
+        /** Shows a temporary message box. */
+        function showMessage(message, type = 'success', duration = 5000) {
+            const box = document.getElementById('message-box');
+            const text = document.getElementById('message-text');
+            if (!box || !text) return;
+
+            box.className = 'mb-6 p-4 rounded-xl text-sm transition-all duration-300 flex items-center animate-fadeIn';
+
+            if (type === 'success') {
+                box.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-200');
+            } else if (type === 'error') {
+                box.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/50', 'dark:text-red-200');
+            } else { // info
+                box.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900/50', 'dark:text-blue-200');
+            }
+
+            text.textContent = message;
+            box.classList.remove('hidden');
+
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, duration);
+        }
+
+        // --- 2. DYNAMIC FILTERING LOGIC ---
+
+        /** Builds a URL query string from the currentFilters object. */
+        function buildQueryString() {
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(currentFilters)) {
+                if (value && value !== 'All' && value !== '') {
+                    // MAPPING DATE FILTERS to the 'booking_date' column as per the schema
+                    if (key === 'startDate') {
+                        // Backend expects booking_date_start
+                        params.append('booking_date_start', value);
+                    } else if (key === 'endDate') {
+                        // Backend expects booking_date_end
+                        params.append('booking_date_end', value);
+                    } else {
+                        params.append(key, value);
+                    }
+                }
+            }
+            const qs = params.toString();
+            return qs ? '?' + qs : '';
+        }
+
+        /** Captures filter selection and triggers data refresh. */
+        function applyFilters() {
+            const city = document.getElementById('city-filter').value;
+            const theatre = document.getElementById('theatre-filter').value;
+            const showTime = document.getElementById('showtime-filter').value;
+            const seatCategory = document.getElementById('seat-category-filter').value;
+            const startDate = document.getElementById('start-date-filter').value; 
+            const endDate = document.getElementById('end-date-filter').value;
+
+            // Basic date validation
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                showMessage('Start date cannot be after end date.', 'error', 5000);
+                return;
+            }
+
+            currentFilters = { city, theatre, showTime, seatCategory, startDate, endDate };
+            
+            // Reset table state on new filter application
+            currentPage = 1; 
+            sortColumn = 'ticket_id';
+            sortDirection = 'desc';
+
+            // IMPORTANT: Calling renderAll() ensures filters apply to ALL dashboard elements
+            renderAll(); 
+            showMessage('Advanced query applied. Dashboard data refreshed from MySQL.', 'success');
+        }
+
+        /** Resets all filters to 'All' and clears the date input. */
+        function resetFilters() {
+            document.getElementById('city-filter').value = 'All';
+            document.getElementById('theatre-filter').value = 'All';
+            document.getElementById('showtime-filter').value = 'All';
+            document.getElementById('seat-category-filter').value = 'All';
+            document.getElementById('start-date-filter').value = '';
+            document.getElementById('end-date-filter').value = '';
+            currentFilters = {};
+        }
+        
+        // --- 3. API CALLS ---
+
+        /** Fetches data from the Node.js backend with exponential backoff. */
+        async function fetchAnalyticsData(endpoint) {
+            const url = `${BASE_API_URL}/${endpoint}${buildQueryString()}`;
+            showLoading(true);
+            try {
+                const MAX_RETRIES = 3;
+                let response;
+
+                for (let i = 0; i < MAX_RETRIES; i++) {
+                    response = await fetch(url);
+                    if (response.ok) break;
+
+                    if (i < MAX_RETRIES - 1) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Server responded with an unknown error.' }));
+                    throw new Error(`HTTP error ${response.status}: ${errorData.message || 'Data retrieval failed.'}`);
+                }
+                const data = await response.json();
+                
+                // Fix for KPI keys (backend sends snake_case, frontend expects camelCase)
+                if (endpoint === 'kpis' && data) {
+                    return {
+                        totalRevenue: parseFloat(data.totalRevenue || 0).toFixed(2),
+                        totalTickets: parseInt(data.totalTickets || 0),
+                        totalPersons: parseInt(data.totalPersons || 0),
+                        avgTicketPrice: parseFloat(data.avgTicketPrice || 0).toFixed(2)
+                    };
+                }
+                
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${url}:`, error);
+                showMessage(`Connection Error: ${error.message}. Please ensure 'node server.js' is running on port 5500 and connected to MySQL.`, 'error', 10000);
+                return {};
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        /** Loads all unique filter options from the metadata endpoint. */
+        async function loadMetadata() {
+            try {
+                const metadata = await fetchAnalyticsData('metadata');
+                
+                const populateSelect = (id, list) => {
+                    const select = document.getElementById(id);
+                    if (!select) return;
+                    select.querySelectorAll('option:not([value="All"])').forEach(opt => opt.remove()); 
+                    if (!list) return;
+
+                    list.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item;
+                        option.textContent = item;
+                        select.appendChild(option);
+                    });
+                };
+
+                populateSelect('city-filter', metadata.cities);
+                populateSelect('theatre-filter', metadata.theatres);
+                populateSelect('showtime-filter', metadata.showtimes);
+                populateSelect('seat-category-filter', metadata.categories);
+                
+            } catch(e) {
+                console.error("Failed to load metadata for filters:", e);
+            }
+        }
+
+        // --- 4. CHART & KPI RENDERING FUNCTIONS ---
+        
+        /** Destroys and re-initializes a chart instance. */
+        function createOrUpdateChart(instanceRefName, canvasId, type, data, options) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            const instance = window[instanceRefName];
+            if (instance) instance.destroy();
+
+            const newInstance = new Chart(ctx, { type, data, options });
+
+            window[instanceRefName] = newInstance;
+            return newInstance;
+        }
+
+        // Helper to get consistent chart colors based on theme
+        const getChartColors = () => {
+            const isDark = document.body.getAttribute('data-mode') === 'dark';
+            const theme = document.body.classList.contains('theme-purple') ? 'purple' : 
+                         document.body.classList.contains('theme-blue') ? 'blue' :
+                         document.body.classList.contains('theme-teal') ? 'teal' : 'rose';
+            
+            const colorMap = {
+                purple: {
+                    primary: isDark ? '#a78bfa' : '#8b5cf6',
+                    light: isDark ? '#c4b5fd' : '#a78bfa',
+                    dark: isDark ? '#7c3aed' : '#7c3aed',
+                    backgrounds: ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#f97316', '#a855f7']
+                },
+                blue: {
+                    primary: isDark ? '#60a5fa' : '#3b82f6',
+                    light: isDark ? '#93c5fd' : '#60a5fa',
+                    dark: isDark ? '#2563eb' : '#2563eb',
+                    backgrounds: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#a855f7']
+                },
+                teal: {
+                    primary: isDark ? '#2dd4bf' : '#14b8a6',
+                    light: isDark ? '#5eead4' : '#2dd4bf',
+                    dark: isDark ? '#0d9488' : '#0d9488',
+                    backgrounds: ['#14b8a6', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#f97316', '#a855f7']
+                },
+                rose: {
+                    primary: isDark ? '#fb7185' : '#f43f5e',
+                    light: isDark ? '#fda4af' : '#fb7185',
+                    dark: isDark ? '#e11d48' : '#e11d48',
+                    backgrounds: ['#f43f5e', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#f97316', '#a855f7']
+                }
+            };
+            
+            const colors = colorMap[theme];
+            colors.grid = isDark ? '#374151' : '#e5e7eb';
+            colors.tick = isDark ? '#9ca3af' : '#6b7280';
+            
+            return colors;
+        };
+
+        async function renderKPIs() {
+            // Note: fetchAnalyticsData now handles the camelCase conversion for kpis
+            const kpis = await fetchAnalyticsData('kpis');
+            const container = document.getElementById('kpi-cards');
+            
+            if (!container || Object.keys(kpis).length === 0 || kpis.totalRevenue === undefined || kpis.totalRevenue === null || isNaN(parseFloat(kpis.totalRevenue))) {
+                container.innerHTML = '<p class="lg:col-span-4 text-center text-gray-500 dark:text-gray-400">KPI data is not available for the selected query.</p>';
+                return;
+            }
+
+            const kpiDefinitions = [
+                { 
+                    title: 'TOTAL REVENUE', 
+                    value: currencyFormatter.format(kpis.totalRevenue), 
+                    icon: 'payments',
+                    color: 'text-green-500',
+                    bgColor: 'bg-green-100 dark:bg-green-900/30'
+                },
+                { 
+                    title: 'TOTAL TICKETS', 
+                    value: kpis.totalTickets.toLocaleString(), 
+                    icon: 'confirmation_number',
+                    color: 'text-blue-500',
+                    bgColor: 'bg-blue-100 dark:bg-blue-900/30'
+                },
+                { 
+                    title: 'TOTAL PERSONS', 
+                    value: kpis.totalPersons.toLocaleString(), 
+                    icon: 'people',
+                    color: 'text-purple-500',
+                    bgColor: 'bg-purple-100 dark:bg-purple-900/30'
+                },
+                { 
+                    title: 'AVG TICKET PRICE', 
+                    value: currencyFormatter.format(kpis.avgTicketPrice), 
+                    icon: 'trending_up',
+                    color: 'text-orange-500',
+                    bgColor: 'bg-orange-100 dark:bg-orange-900/30'
+                }
+            ];
+
+            container.innerHTML = kpiDefinitions.map(kpi => `
+                <div class="kpi-card bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-5 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 animate-fadeIn">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">${kpi.title}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">${kpi.value}</p>
+                        </div>
+                        <div class="p-3 rounded-xl ${kpi.bgColor}">
+                            <span class="material-icons ${kpi.color}">${kpi.icon}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                            <span class="material-icons text-xs mr-1 text-green-500">arrow_upward</span>
+                            <span>+5.2% from last month</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function renderTopMoviesChart() {
+            let movieData = await fetchAnalyticsData('top_movies');
+            const colors = getChartColors();
+
+            // MOCK DATA FALLBACK for demonstration
+            if (!movieData || !movieData.labels || movieData.labels.length === 0) {
+                console.warn("Using mock data for Top Movies Chart as API data was empty.");
+                movieData = {
+                    labels: ['The Grand Adventure', 'Cybernetic Dream', 'A Silent Dawn', 'Jungle Heat', 'Mystic Path'],
+                    // Mock revenue in Indian Rupees (INR)
+                    data: [75000000, 68000000, 55000000, 42000000, 31000000] 
+                };
+                // Check again after mocking
+                if (!movieData.labels || movieData.labels.length === 0) return;
+            }
+            
+            // Fallback if no data is available even after mocking (e.g., in a real-world scenario)
+            if (!document.getElementById('topMoviesChart')) return;
+
+            const data = {
+                labels: movieData.labels,
+                datasets: [{
+                    label: 'Revenue (INR)',
+                    data: movieData.data,
+                    backgroundColor: colors.backgrounds, 
+                    borderColor: colors.backgrounds.map(color => color.replace('0.8', '1')),
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', 
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid },
+                        ticks: { 
+                            color: colors.tick, 
+                            // Use a function to format the labels on the X-axis for large numbers
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return currencyFormatter.format(value).replace('INR', '').trim();
+                                }
+                                return currencyFormatter.format(value).replace('INR', '').trim();
+                            } 
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: colors.tick }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { 
+                        callbacks: { 
+                            label: (context) => context.dataset.label + ': ' + currencyFormatter.format(context.raw) 
+                        } 
+                    }
+                }
+            };
+            createOrUpdateChart('topMoviesChartInstance', 'topMoviesChart', 'bar', data, options);
+        }
+
+        // --- Chart 2: Revenue by City (Pie Chart) ---
+        async function renderCityRevenueChart() {
+            let cityData = await fetchAnalyticsData('cities');
+            const colors = getChartColors();
+
+            // MOCK DATA FALLBACK (Updated with cities from the image)
+            if (!cityData || !cityData.labels || cityData.labels.length === 0) {
+                console.warn("Using mock data for City Revenue Chart as API data was empty or failed to load.");
+                cityData = {
+                    labels: ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Hyderabad', 'Kolkata', 'Ahmedabad', 'Chandigarh'],
+                    // Mock revenue data in INR, reflecting a large metro split
+                    data: [
+                        55000000, 
+                        40000000, 
+                        30000000, 
+                        25000000, 
+                        20000000, 
+                        15000000, 
+                        12000000, 
+                        8000000
+                    ] 
+                };
+                // Check again after mocking
+                if (!cityData.labels || cityData.labels.length === 0) return;
+            }
+
+            // Calculate total revenue for percentage display in labels
+            const totalRevenue = cityData.data.reduce((sum, value) => sum + value, 0);
+
+            const data = {
+                labels: cityData.labels,
+                datasets: [{
+                    data: cityData.data,
+                    // Use colors from the global palette, which has 8 colors defined
+                    backgroundColor: colors.backgrounds.slice(0, cityData.labels.length),
+                    hoverOffset: 15,
+                    borderWidth: 2, 
+                    borderColor: colors.grid,
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { 
+                            color: colors.tick,
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
+                    tooltip: { 
+                        callbacks: { 
+                            label: (context) => `${context.label}: ${currencyFormatter.format(context.raw)}` 
+                        } 
+                    },
+                    // Datalabels Plugin Configuration
+                    datalabels: {
+                        formatter: (value, context) => {
+                            const percentage = ((value / totalRevenue) * 100).toFixed(1);
+                            return percentage + '%';
+                        },
+                        color: '#fff', // White labels for readability
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        }
+                    }
+                }
+            };
+            // Register the datalabels plugin specifically for this chart
+            Chart.register(ChartDataLabels);
+            createOrUpdateChart('cityRevenueChartInstance', 'cityRevenueChart', 'pie', data, options);
+        }
+
+        // --- Chart 3: Revenue by Theatre Name (Bar Chart) ---
+        async function renderTheatreRevenueChart() {
+            const theatreData = await fetchAnalyticsData('theatres');
+            const colors = getChartColors();
+
+            if (!theatreData || !theatreData.labels || theatreData.labels.length === 0) return;
+
+            const data = {
+                labels: theatreData.labels,
+                datasets: [{
+                    label: 'Revenue (INR)',
+                    data: theatreData.data,
+                    backgroundColor: colors.backgrounds[5], 
+                    borderColor: colors.backgrounds[5],
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.tick, callback: value => currencyFormatter.format(value).replace('$', '$') }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.tick }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (context) => context.dataset.label + ': ' + currencyFormatter.format(context.raw) } }
+                }
+            };
+            createOrUpdateChart('theatreRevenueChartInstance', 'theatreRevenueChart', 'bar', data, options);
+        }
+
+        // --- Chart 4: Persons by Age Group (Doughnut Chart) ---
+        async function renderAgeGroupPersonsChart() {
+            const ageData = await fetchAnalyticsData('age_groups');
+            const colors = getChartColors();
+
+            if (!ageData || !ageData.labels || ageData.labels.length === 0) return;
+
+            const data = {
+                labels: ageData.labels,
+                datasets: [{
+                    data: ageData.data,
+                    backgroundColor: colors.backgrounds.slice(0, ageData.labels.length),
+                    hoverOffset: 15,
+                    borderWidth: 2,
+                    borderColor: colors.grid
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { 
+                            color: colors.tick,
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
+                    tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw.toLocaleString()} attendees` } }
+                }
+            };
+
+            // NOTE: The canvas ID is 'ageGroupPersonsChart' in the HTML body, but function name is renderAgeGroupPersonsChart. 
+            // We use the correct canvas ID here.
+            createOrUpdateChart('ageGroupPersonsChartInstance', 'ageGroupPersonsChart', 'doughnut', data, options);
+        }
+        
+        // --- Chart 5: Revenue by Seat Category (Pie/Doughnut) ---
+        async function renderSeatCategoryRevenueChart() {
+            const seatData = await fetchAnalyticsData('seat_categories');
+            const colors = getChartColors();
+
+            if (!seatData || !seatData.labels || seatData.labels.length === 0) return;
+
+            const data = {
+                labels: seatData.labels,
+                datasets: [{
+                    data: seatData.data,
+                    backgroundColor: colors.backgrounds.slice(0, seatData.labels.length),
+                    hoverOffset: 15,
+                    borderWidth: 2,
+                    borderColor: colors.grid
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { 
+                            color: colors.tick,
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
+                    tooltip: { callbacks: { label: (context) => `${context.label}: ${currencyFormatter.format(context.raw)}` } }
+                }
+            };
+
+            createOrUpdateChart('seatCategoryRevenueChartInstance', 'seatCategoryRevenueChart', 'pie', data, options);
+        }
+
+        // --- 5. DATA TABLE FUNCTIONS (NEW) ---
+
+        /** Fetches all ticket data based on current filters. */
+        async function fetchAllTicketData() {
+            // This API call must return the full, unfiltered (by page/sort) dataset
+            const data = await fetchAnalyticsData('sales_data'); 
+            return Array.isArray(data) ? data : [];
+        }
+
+        /** Utility to sort data array (client-side). */
+        function sortData(data, column, direction) {
+            return data.sort((a, b) => {
+                const valA = a[column];
+                const valB = b[column];
+                
+                let comparison = 0;
+                // Handle null/undefined values
+                if (valA === null || valA === undefined) comparison = -1;
+                else if (valB === null || valB === undefined) comparison = 1;
+                // Handle numerical comparison
+                else if (typeof valA === 'number' && typeof valB === 'number') {
+                    comparison = valA - valB;
+                } 
+                // Handle string/date comparison
+                else if (String(valA) > String(valB)) {
+                    comparison = 1;
+                } else if (String(valA) < String(valB)) {
+                    comparison = -1;
+                }
+                
+                return direction === 'desc' ? comparison * -1 : comparison;
+            });
+        }
+
+        /** Handles table header clicks for sorting. */
+        function handleSort(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                // Default ticket_id to desc, others to asc on first click
+                sortDirection = column === 'ticket_id' ? 'desc' : 'asc'; 
+            }
+            currentPage = 1; // Reset to first page after sort
+            renderDataTable();
+        }
+
+        /** Renders the data table with sorting and pagination. */
+        async function renderDataTable() {
+            // Re-fetch data only on the first page or upon filter change
+            if (currentPage === 1) { 
+                 allTicketData = await fetchAllTicketData(); 
+            }
+
+            // 1. Sorting (use a copy of data for sorting)
+            const sortedData = sortData([...allTicketData], sortColumn, sortDirection);
+
+            // 2. Pagination
+            const totalRows = sortedData.length;
+            const totalPages = Math.ceil(totalRows / ROWS_PER_PAGE);
+            const start = (currentPage - 1) * ROWS_PER_PAGE;
+            const end = start + ROWS_PER_PAGE;
+            const pagedData = sortedData.slice(start, end);
+
+            const tableBody = document.querySelector('#sales-table tbody');
+            const tableHead = document.querySelector('#sales-table thead tr');
+            const statusDiv = document.getElementById('pagination-status');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+
+            // Clear previous content
+            tableBody.innerHTML = '';
+            tableHead.innerHTML = '';
+
+            if (totalRows === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9" class="py-4 text-center text-gray-500 dark:text-gray-400">No ticket sales data available for the selected filters.</td></tr>`;
+                statusDiv.textContent = 'Showing 0 results.';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                return;
+            }
+
+            // Define columns based on your provided schema (e.g., City is capitalized)
+            const columns = [
+                { key: 'ticket_id', label: 'Ticket ID' }, 
+                { key: 'movie_title', label: 'Movie Title' },
+                { key: 'City', label: 'City' },
+                { key: 'theatre_name', label: 'Theatre' },
+                { key: 'show_time', label: 'Show Time' },
+                { key: 'seat_category', label: 'Seat Category' },
+                { key: 'ticket_price', label: 'Price (INR)' }, // Using ticket_price for display
+                { key: 'age', label: 'Age' }, 
+                { key: 'booking_date', label: 'Sale Date' }
+            ];
+
+            // 3. Render Table Header with sorting indicators
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-150';
+                th.textContent = col.label;
+                th.setAttribute('data-column', col.key);
+                th.addEventListener('click', () => handleSort(col.key));
+
+                if (col.key === sortColumn) {
+                    const arrow = sortDirection === 'asc' ? ' ↑' : ' ↓';
+                    th.textContent += arrow;
+                    th.classList.add('text-purple-500', 'dark:text-purple-400');
+                }
+                tableHead.appendChild(th);
+            });
+
+            // 4. Render Table Body
+            pagedData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150';
+                
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300';
+                    
+                    let displayValue = row[col.key] !== null && row[col.key] !== undefined ? row[col.key] : '';
+                    
+                    // Formatting
+                    if (col.key === 'ticket_price') {
+                        displayValue = currencyFormatter.format(displayValue);
+                    } else if (col.key === 'booking_date' && displayValue) {
+                        // Use booking_date for the display
+                        try {
+                             displayValue = new Date(displayValue).toLocaleDateString('en-US', { timeZone: 'UTC' });
+                        } catch {
+                            // Keep original value if date parsing fails
+                        }
+                    }
+
+                    td.textContent = displayValue;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+
+            // 5. Update Pagination Controls
+            statusDiv.textContent = `Showing ${start + 1}-${Math.min(end, totalRows)} of ${totalRows} records. (Page ${currentPage} of ${totalPages})`;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalRows === 0;
+
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderDataTable();
+                }
+            };
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderDataTable();
+                }
+            };
+        }
+
+        /** Renders all dashboard components. */
+        function renderAll() {
+            // Render all charts and KPIs
+            renderKPIs();
+            renderTopMoviesChart();
+            renderCityRevenueChart();
+            renderTheatreRevenueChart();
+            renderAgeGroupPersonsChart(); 
+            renderSeatCategoryRevenueChart();
+            
+            // Render the detailed sales data table
+            renderDataTable();
+        }
+
+        // --- 6. DARK MODE & INITIALIZATION ---
+
+        function setupDarkMode() {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            const body = document.body;
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+
+            const savedMode = localStorage.getItem('theme') || 'light';
+            setMode(savedMode);
+
+            function setMode(mode) {
+                const isDark = mode === 'dark';
+                const textColor = isDark ? '#9ca3af' : '#6b7280'; // Ticks/Labels color for Chart.js
+                
+                if (isDark) {
+                    body.setAttribute('data-mode', 'dark');
+                    body.classList.add('dark'); // This class triggers dark: utility backgrounds
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    body.setAttribute('data-mode', 'light');
+                    body.classList.remove('dark');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+                
+                // IMPORTANT FIX: Set global Chart.js text color default
+                Chart.defaults.color = textColor; 
+
+                localStorage.setItem('theme', mode);
+            }
+
+            toggleButton.addEventListener('click', () => {
+                const newMode = body.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';
+                setMode(newMode);
+                // Re-render all elements to update chart colors/themes
+                renderAll(); 
+            });
+        }
+
+        // Theme switcher
+        function setupThemeSwitcher() {
+            const themeButtons = document.querySelectorAll('.theme-toggle');
+            
+            themeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const theme = button.getAttribute('data-theme');
+                    
+                    // Remove all theme classes
+                    document.body.classList.remove('theme-purple', 'theme-blue', 'theme-teal', 'theme-rose');
+                    
+                    // Add the selected theme class
+                    document.body.classList.add(`theme-${theme}`);
+                    
+                    // Re-render all charts with new colors
+                    renderAll();
+                });
+            });
+        }
+
+        // Mobile sidebar toggle
+        function setupMobileSidebar() {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('hidden');
+                });
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                dateElement.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+
+        window.onload = function() {
+            setupDarkMode();
+            setupThemeSwitcher();
+            setupMobileSidebar();
+            setCurrentDate();
+            loadMetadata(); 
+            // Initial render: Data is fetched without filters (empty query string)
+            renderAll(); 
+            showMessage('Dashboard connected to MySQL via Node.js API. Use filters and the table sorting/pagination for deep analysis!', 'success');
+        };
+    </script>
+</body>
+</html>

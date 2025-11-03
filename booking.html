@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Movie Now</title>
+    <!-- Load Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5',
+                        'primary-dark': '#6366f1',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for the form layout */
+        select, input:not([type="radio"]) {
+            /* Ensures form elements look good */
+            border-color: #d1d5db;
+        }
+        input:read-only {
+            background-color: #f3f4f6;
+            cursor: default;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 w-full max-w-3xl">
+        <h1 class="text-3xl font-extrabold text-primary mb-2">Book a New Ticket Sale</h1>
+        <p class="text-gray-500 mb-6">Enter all required data below to upload a new sale record.</p>
+
+        <!-- Alert/Message Box -->
+        <div id="message-box" class="hidden mb-4 p-4 rounded-xl text-sm" role="alert"></div>
+
+        <form id="new-sale-form" onsubmit="event.preventDefault(); submitNewTicket();" class="space-y-6">
+
+            <!-- Section 1: Ticket & Movie Info -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-4 border-gray-200">
+                <!-- TICKET ID FIELD (READ-ONLY) -->
+                <div>
+                    <label for="form-ticket-id" class="block text-sm font-medium text-gray-700">Ticket ID (Auto-Generated)</label>
+                    <input type="text" id="form-ticket-id" required readonly class="mt-1 block w-full rounded-md border-gray-300 shadow-inner p-2 font-mono bg-gray-200 text-gray-700 font-bold">
+                </div>
+                
+                <div class="md:col-span-3">
+                    <label for="form-movie-title" class="block text-sm font-medium text-gray-700">Movie Title*</label>
+                    <input type="text" id="form-movie-title" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+
+                <div>
+                    <label for="form-movie-id" class="block text-sm font-medium text-gray-700">Movie ID</label>
+                    <input type="text" id="form-movie-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+                <div>
+                    <label for="form-release-date" class="block text-sm font-medium text-gray-700">Release Date</label>
+                    <input type="date" id="form-release-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+                <div>
+                    <label for="form-booking-date" class="block text-sm font-medium text-gray-700">Booking Date*</label>
+                    <input type="date" id="form-booking-date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+            </div>
+
+            <!-- Section 2: Location & Timing -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 border-gray-200">
+                <div>
+                    <label for="form-city" class="block text-sm font-medium text-gray-700">City*</label>
+                    <select id="form-city" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                        <option value="" disabled selected>Loading Cities...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="form-theatre-name" class="block text-sm font-medium text-gray-700">Theatre Name*</label>
+                    <select id="form-theatre-name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                        <option value="" disabled selected>Loading Theatres...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="form-show-time" class="block text-sm font-medium text-gray-700">Show Time*</label>
+                    <select id="form-show-time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                       <option value="" disabled selected>Loading Times...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Section 3: Language & Category -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4 border-gray-200">
+                <div>
+                    <label for="form-language" class="block text-sm font-medium text-gray-700">Language</label>
+                    <input type="text" id="form-language" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2" placeholder="e.g., English, Hindi">
+                </div>
+                <div>
+                    <label for="form-original-language" class="block text-sm font-medium text-gray-700">Original Language</label>
+                    <input type="text" id="form-original-language" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2" placeholder="e.g., Telugu, French">
+                </div>
+                <div>
+                    <label for="form-seat-category" class="block text-sm font-medium text-gray-700">Seat Category*</label>
+                    <select id="form-seat-category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                        <option value="" disabled selected>Loading Categories...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Section 4: Transaction Details -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label for="form-ticket-price" class="block text-sm font-medium text-gray-700">Ticket Price (INR)*</label>
+                    <input type="number" id="form-ticket-price" step="0.01" min="0" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+                <div>
+                    <label for="form-no-of-persons" class="block text-sm font-medium text-gray-700">No. of Persons*</label>
+                    <input type="number" id="form-no-of-persons" min="1" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                </div>
+                <div>
+                    <label for="form-ticket-type" class="block text-sm font-medium text-gray-700">Ticket Type</label>
+                    <select id="form-ticket-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                        <option value="Standard">Standard</option>
+                        <option value="Promo">Promotion</option>
+                        <option value="Group">Group</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="form-payment-type" class="block text-sm font-medium text-gray-700">Payment Type</label>
+                    <select id="form-payment-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Cash">Cash</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Section 5: Audience Attributes -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+                <div>
+                    <label for="form-age" class="block text-sm font-medium text-gray-700">Age (Buyer)</label>
+                    <input type="number" id="form-age" min="1" max="120" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary p-2">
+                    <p class="text-xs text-gray-500 mt-1">Single age for primary buyer.</p>
+                </div>
+                
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Adult Ticket?*</label>
+                    <div class="mt-1 flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="adult-status" value="true" required class="form-radio text-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="adult-status" value="false" required class="form-radio text-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Sex</label>
+                    <div class="mt-1 flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="sex-status" value="M" class="form-radio text-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Male</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="sex-status" value="F" class="form-radio text-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Female</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="sex-status" value="O" class="form-radio text-primary h-4 w-4">
+                            <span class="ml-2 text-sm text-gray-700">Other</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" id="upload-new-sale-btn" class="w-full px-4 py-3 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out mt-6">
+                Upload New Sale to Database
+            </button>
+            <button type="button" class="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150" onclick="document.getElementById('new-sale-form').reset();">
+                Clear Form
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const BASE_API_URL = 'http://localhost:5500/api'; 
+
+        function showMessage(message, type = 'error', duration = 5000) {
+            const box = document.getElementById('message-box');
+            if (!box) return;
+
+            box.className = 'mb-4 p-4 rounded-xl text-sm transition-all duration-300';
+            if (type === 'success') {
+                box.classList.add('bg-green-100', 'text-green-800');
+            } else { // error
+                box.classList.add('bg-red-100', 'text-red-800');
+            }
+
+            box.textContent = message;
+            box.classList.remove('hidden');
+
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, duration);
+        }
+        
+        const getRadioValue = (name) => {
+            const radios = document.getElementsByName(name);
+            for (const radio of radios) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return null;
+        };
+
+        // Helper to clear and populate a select dropdown
+        const populateSelect = (select, list, placeholderText = "Select an option") => {
+            // Preserve the 'disabled selected' state of the default option if present, otherwise clear
+            select.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
+            if (!list) return;
+            list.filter(Boolean).forEach(item => { 
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                select.appendChild(option);
+            });
+        };
+        
+        // --- NEW FUNCTION: Fetch and display the next Ticket ID ---
+        async function fetchNextTicketId() {
+            const idInput = document.getElementById('form-ticket-id');
+            idInput.value = 'Loading...'; 
+            try {
+                const response = await fetch(`${BASE_API_URL}/next_ticket_id`);
+                if (!response.ok) throw new Error("Server failed to generate next ID.");
+                const data = await response.json();
+                idInput.value = data.ticket_id || 'ERROR';
+            } catch (e) {
+                idInput.value = 'FAILED';
+                console.error("Ticket ID fetch error:", e);
+                showMessage("Could not fetch next Ticket ID. Check Node.js server status and 'generateNextTicketId' logic.", 'error', 10000);
+            }
+        }
+
+        // Fetches metadata and populates form dropdowns
+        async function loadMetadataAndPopulateForm() {
+            // Start ID fetch immediately
+            fetchNextTicketId(); 
+            
+            try {
+                const response = await fetch(`${BASE_API_URL}/metadata`);
+                if (!response.ok) throw new Error("Failed to fetch metadata for dropdowns.");
+                const metadata = await response.json();
+                
+                // Populate the dropdowns using metadata keys
+                populateSelect(document.getElementById('form-city'), metadata.cities, "Select City");
+                populateSelect(document.getElementById('form-theatre-name'), metadata.theatres, "Select Theatre");
+                populateSelect(document.getElementById('form-show-time'), metadata.showtimes, "Select Show Time");
+                populateSelect(document.getElementById('form-seat-category'), metadata.categories, "Select Category");
+
+            } catch(e) {
+                console.error("Metadata load error:", e);
+                showMessage("Could not load City and Category options. Ensure your Node.js API is running.", 'error', 10000);
+            }
+        }
+
+        async function submitNewTicket() {
+            const persons = parseInt(document.getElementById('form-no-of-persons').value);
+            const price = parseFloat(document.getElementById('form-ticket-price').value);
+            const ageInput = document.getElementById('form-age').value;
+            const newTicketId = document.getElementById('form-ticket-id').value;
+            
+            // Basic validation for auto-generated ID
+            if (!newTicketId || newTicketId.startsWith('Loading')) {
+                showMessage("Ticket ID not generated yet. Please wait or refresh.", 'error');
+                return;
+            }
+
+            const saleData = {
+                ticket_id: newTicketId,
+                movie_title: document.getElementById('form-movie-title').value,
+                movie_id: document.getElementById('form-movie-id').value || null,
+                theatre_name: document.getElementById('form-theatre-name').value,
+                city: document.getElementById('form-city').value,
+                show_time: document.getElementById('form-show-time').value,
+                seat_category: document.getElementById('form-seat-category').value,
+                booking_date: document.getElementById('form-booking-date').value,
+                release_date: document.getElementById('form-release-date').value || null,
+
+                ticket_price: price,
+                no_of_persons: persons,
+                // Calculate payment_Amount based on price and persons
+                payment_Amount: (persons * price).toFixed(2), 
+                payment_type: document.getElementById('form-payment-type').value,
+                ticket_type: document.getElementById('form-ticket-type').value,
+                
+                age: ageInput ? parseInt(ageInput) : null,
+                adult: getRadioValue('adult-status') === 'true', // Sends boolean
+                sex: getRadioValue('sex-status'),
+                language: document.getElementById('form-language').value || null,
+                original_language: document.getElementById('form-original-language').value || null,
+            };
+
+            // Prevent submission if a required dropdown is empty (value="")
+            for (const key of ['city', 'theatre_name', 'show_time', 'seat_category']) {
+                if (!saleData[key]) {
+                     showMessage(`Please select a value for required field: ${key.replace('_', ' ')}.`, 'error');
+                     return;
+                }
+            }
+
+
+            try {
+                document.getElementById('upload-new-sale-btn').textContent = 'Uploading...';
+                document.getElementById('upload-new-sale-btn').disabled = true;
+
+                // IMPORTANT: POST request to the API endpoint
+                const response = await fetch(`${BASE_API_URL}/new_sale`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(saleData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Server upload failure.' }));
+                    throw new Error(errorData.message || 'Failed to upload ticket sale. Check console for details.');
+                }
+                
+                document.getElementById('new-sale-form').reset();
+                showMessage(`New ticket sale uploaded successfully! ID: ${newTicketId}`, 'success');
+                
+                // Fetch the NEXT ID for the next booking immediately after successful upload
+                fetchNextTicketId();
+                
+            } catch (error) {
+                console.error("Upload Error:", error);
+                showMessage(`Upload Failed: ${error.message}.`, 'error');
+            } finally {
+                document.getElementById('upload-new-sale-btn').textContent = 'Upload New Sale to Database';
+                document.getElementById('upload-new-sale-btn').disabled = false;
+            }
+        }
+
+        window.onload = loadMetadataAndPopulateForm;
+    </script>
+</body>
+</html>
